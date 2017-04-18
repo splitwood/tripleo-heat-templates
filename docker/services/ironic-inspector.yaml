@@ -1,0 +1,152 @@
+heat_template_version: ocata
+
+description: >
+  OpenStack containerized Ironic Inspector service (EXPERIMENTAL)
+
+parameters:
+  DockerNamespace:
+    description: namespace
+    default: 'tripleoupstream'
+    type: string
+  DockerIronicInspectorImage:
+    description: image
+    default: 'centos-binary-ironic-inspector:latest'
+    type: string
+  EndpointMap:
+    default: {}
+    description: Mapping of service endpoint -> protocol. Typically set
+                 via parameter_defaults in the resource registry.
+    type: json
+  ServiceNetMap:
+    default: {}
+    description: Mapping of service_name -> network name. Typically set
+                 via parameter_defaults in the resource registry.  This
+                 mapping overrides those in ServiceNetMapDefaults.
+    type: json
+  DefaultPasswords:
+    default: {}
+    type: json
+  RoleName:
+    default: ''
+    description: Role name on which the service is applied
+    type: string
+  RoleParameters:
+    default: {}
+    description: Parameters specific to the role
+    type: json
+
+resources:
+
+  ContainersCommon:
+    type: ./containers-common.yaml
+
+  IronicInspectorBase:
+    type: ../../puppet/services/ironic-inspector.yaml
+    properties:
+      EndpointMap: {get_param: EndpointMap}
+      ServiceNetMap: {get_param: ServiceNetMap}
+      DefaultPasswords: {get_param: DefaultPasswords}
+      RoleName: {get_param: RoleName}
+      RoleParameters: {get_param: RoleParameters}
+
+outputs:
+  role_data:
+    description: Role data for the Ironic Inspector role.
+    value:
+      service_name: {get_attr: [IronicInspectorBase, role_data, service_name]}
+      config_settings:
+        map_merge:
+          - get_attr: [IronicInspectorBase, role_data, config_settings]
+          # Match what we do for Ironic containers
+          - ironic::inspector::tftp_root: /var/lib/ironic/tftpboot
+          - ironic::inspector::http_root: /var/lib/ironic/httpboot
+      step_config: &step_config
+        {get_attr: [IronicInspectorBase, role_data, step_config]}
+      service_config_settings: {get_attr: [IronicInspectorBase, role_data, service_config_settings]}
+      # BEGIN DOCKER SETTINGS
+      puppet_config:
+          config_volume: ironic_inspector
+          puppet_tags: ironic_inspector_config
+          step_config: *step_config
+          config_image: &ironic_inspector_image
+            list_join:
+              - '/'
+              - [ {get_param: DockerNamespace}, {get_param: DockerIronicInspectorImage} ]
+      kolla_config:
+         /var/lib/kolla/config_files/ironic_inspector.json:
+           command: /usr/bin/ironic-inspector --config-file /etc/ironic-inspector/inspector-dist.conf --config-file /etc/ironic-inspector/inspector.conf
+           permissions:
+           - path: /var/log/ironic-inspector
+             owner: ironic-inspector:ironic-inspector
+             recurse: true
+         /var/lib/kolla/config_files/ironic_inspector_dnsmasq.json:
+           command: /sbin/dnsmasq --conf-file=/etc/ironic-inspector/dnsmasq.conf -k
+      docker_config:
+        step_3:
+          ironic_inspector_init_log:
+            start_order: 0
+            image: *ironic_inspector_image
+            user: root
+            volumes:
+              - /var/log/containers/ironic-inspector:/var/log/ironic-inspector
+            command: ['/bin/bash', '-c', 'chown -R ironic-inspector:ironic-inspector /var/log/ironic-inspector']
+          ironic_inspector_db_sync:
+            start_order: 1
+            image: *ironic_inspector_image
+            net: host
+            user: ironic-inspector
+            privileged: false
+            detach: false
+            volumes:
+              list_concat:
+                - {get_attr: [ContainersCommon, volumes]}
+                -
+                  - /var/lib/config-data/ironic_inspector/etc/:/etc/:ro
+                  - /etc/hosts:/etc/hosts:ro
+                  - /etc/localtime:/etc/localtime:ro
+                  - /var/log/containers/ironic-inspector:/var/log/ironic-inspector
+            environment:
+              - KOLLA_CONFIG_STRATEGY=COPY_ALWAYS
+            command: ['ironic-inspector-dbsync', '--config-file', '/etc/ironic-inspector/inspector.conf', 'upgrade']
+        step_4:
+          ironic_inspector:
+            start_order: 92
+            image: *ironic_inspector_image
+            user: root
+            privileged: true
+            net: host
+            restart: always
+            volumes:
+              list_concat:
+                - {get_attr: [ContainersCommon, volumes]}
+                -
+                  - /var/lib/kolla/config_files/ironic_inspector.json:/var/lib/kolla/config_files/config.json:ro
+                  - /var/lib/config-data/ironic_inspector/:/var/lib/kolla/config_files/src:ro
+                  - /etc/hosts:/etc/hosts:ro
+                  - /etc/localtime:/etc/localtime:ro
+                  - ironic:/var/lib/ironic
+                  - /var/log/containers/ironic-inspector:/var/log/ironic-inspector
+            environment:
+              - KOLLA_CONFIG_STRATEGY=COPY_ALWAYS
+          ironic_inspector_dnsmasq:
+            start_order: 93
+            image: *ironic_inspector_image
+            user: root
+            privileged: true
+            net: host
+            restart: always
+            volumes:
+              list_concat:
+                - {get_attr: [ContainersCommon, volumes]}
+                -
+                  - /var/lib/kolla/config_files/ironic_inspector_dnsmasq.json:/var/lib/kolla/config_files/config.json:ro
+                  - /var/lib/config-data/ironic_inspector/:/var/lib/kolla/config_files/src:ro
+                  - /etc/hosts:/etc/hosts:ro
+                  - /etc/localtime:/etc/localtime:ro
+            environment:
+              - KOLLA_CONFIG_STRATEGY=COPY_ALWAYS
+      host_prep_tasks:
+        - name: create persistent ironic-inspector logs directory
+          file:
+            path: /var/log/containers/ironic-inspector
+            state: directory
