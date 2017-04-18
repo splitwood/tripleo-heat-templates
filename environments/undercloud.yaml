@@ -18,3 +18,5 @@ parameter_defaults:
     ironic::config::ironic_config:
       dhcp/dhcp_provider:
         value: none
+  IronicInspectorInterface: br-ctlplane
+  IronicInspectorIpRange: '192.168.24.100,192.168.24.200'
