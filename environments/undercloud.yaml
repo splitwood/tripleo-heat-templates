@@ -9,3 +9,7 @@ parameter_defaults:
   SoftwareConfigTransport: POLL_SERVER_HEAT
   UndercloudExtraConfig:
     ironic::auth_strategy: noauth
+    # (slagle) seeing some IPMI timeouts locally in my environment, so raise
+    # the timeout to 60. It's actually 60 by default in Ironic, but for some
+    # reason is defaulted to 10 in puppet-ironic.
+    ironic::drivers::ipmi::retry_timeout: 60
