@@ -7,14 +7,5 @@ resource_registry:
 parameter_defaults:
   StackAction: CREATE
   SoftwareConfigTransport: POLL_SERVER_HEAT
-  NeutronTunnelTypes: []
-  NeutronBridgeMappings: ctlplane:br-ctlplane
-  NeutronAgentExtensions: []
-  NeutronFlatNetworks: '*'
-  NeutronDnsDomain: ''
-  NovaSchedulerAvailableFilters: 'tripleo_common.filters.list.tripleo_filters'
-  NovaSchedulerDefaultFilters: ['RetryFilter', 'TripleOCapabilitiesFilter', 'ComputeCapabilitiesFilter', 'AvailabilityZoneFilter', 'RamFilter', 'DiskFilter', 'ComputeFilter', 'ImagePropertiesFilter', 'ServerGroupAntiAffinityFilter', 'ServerGroupAffinityFilter']
-  NeutronDhcpAgentsPerNetwork: 2
-  HeatConvergenceEngine: false
-  HeatMaxResourcesPerStack: -1
-  HeatMaxJsonBodySize: 2097152
+  UndercloudExtraConfig:
+    ironic::auth_strategy: noauth
