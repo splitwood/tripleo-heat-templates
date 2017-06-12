@@ -3,6 +3,7 @@ resource_registry:
   OS::TripleO::Network::Ports::ControlPlaneVipPort: ../deployed-server/deployed-neutron-port.yaml
   OS::TripleO::Undercloud::Net::SoftwareConfig: ../net-config-noop.yaml
   OS::TripleO::NodeExtraConfigPost: ../extraconfig/post_deploy/undercloud_post.yaml
+  OS::TripleO::Services::IronicDnsmasq: ../docker/services/ironic-dnsmasq.yaml
 
 parameter_defaults:
   StackAction: CREATE
@@ -13,3 +14,5 @@ parameter_defaults:
     # the timeout to 60. It's actually 60 by default in Ironic, but for some
     # reason is defaulted to 10 in puppet-ironic.
     ironic::drivers::ipmi::retry_timeout: 60
+    ironic::conductor::automated_clean: false
+
