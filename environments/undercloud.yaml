@@ -15,4 +15,6 @@ parameter_defaults:
     # reason is defaulted to 10 in puppet-ironic.
     ironic::drivers::ipmi::retry_timeout: 60
     ironic::conductor::automated_clean: false
-
+    ironic::config::ironic_config:
+      dhcp/dhcp_provider:
+        value: none
