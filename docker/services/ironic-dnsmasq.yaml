@@ -71,13 +71,19 @@ outputs:
             net: host
             restart: always
             volumes:
-              list_concat:
-                - {get_attr: [ContainersCommon, volumes]}
-                -
-                  - /var/lib/kolla/config_files/ironic_dnsmasq.json:/var/lib/kolla/config_files/config.json:ro
-                  - /var/lib/ironic/dnsmasq:/var/lib/ironic/dnsmasq
-                  - /etc/hosts:/etc/hosts:ro
-                  - /etc/localtime:/etc/localtime:ro
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              # OpenSSL trusted CAs
+              - /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro
+              - /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro
+              - /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro
+              - /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro
+              # Syslog socket
+              - /dev/log:/dev/log
+              - /var/lib/kolla/config_files/ironic_dnsmasq.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/ironic/dnsmasq:/var/lib/ironic/dnsmasq
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
             environment:
               - KOLLA_CONFIG_STRATEGY=COPY_ALWAYS
       host_prep_tasks:
