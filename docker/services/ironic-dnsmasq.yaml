@@ -60,7 +60,7 @@ outputs:
       kolla_config:
          /var/lib/kolla/config_files/ironic_dnsmasq.json:
            command: |
-             dnsmasq --no-hosts --no-resolv --strict-order --except-interface=lo --pid-file=/var/lib/ironic/dnsmasq/pid --dhcp-hostsfile=/var/lib/ironic/dnsmasq/host --addn-hosts=/var/lib/ironic/dnsmasq/addn_hosts --dhcp-optsfile=/var/lib/ironic/dnsmasq/opts --dhcp-leasefile=/var/lib/ironic/dnsmasq/leases --dhcp-match=set:ipxe,175 --bind-interfaces --interface=eth1 --dhcp-range=set:tag0,192.168.24.0,static,86400s --dhcp-option-force=option:mtu,1500 --dhcp-lease-max=256 -d
+             dnsmasq --no-hosts --no-resolv --strict-order --except-interface=lo --pid-file=/var/lib/ironic/dnsmasq/pid --dhcp-hostsfile=/var/lib/ironic/dnsmasq/host --addn-hosts=/var/lib/ironic/dnsmasq/addn_hosts --dhcp-optsfile=/var/lib/ironic/dnsmasq/opts --dhcp-leasefile=/var/lib/ironic/dnsmasq/leases --dhcp-match=set:ipxe,175 --bind-interfaces --interface=eth1 --dhcp-range=set:tag0,192.168.24.0,static,86400s --dhcp-option-force=option:mtu,1500 --dhcp-lease-max=256 -C /var/lib/ironic/dnsmasq/config -d
       docker_config:
         step_4:
           ironic_dnsmasq:
@@ -91,3 +91,7 @@ outputs:
           file:
             path: /var/lib/ironic/dnsmasq
             state: directory
+        - name: create initial empty ironic-dnsmasq config
+          file:
+            path: /var/lib/ironic/dnsmasq/config
+            state: touch
