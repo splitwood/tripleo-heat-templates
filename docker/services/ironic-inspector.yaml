@@ -72,6 +72,8 @@ outputs:
             list_join:
               - '/'
               - [ {get_param: DockerNamespace}, {get_param: DockerIronicInspectorImage} ]
+          volumes:
+            - /var/lib/ironic:/var/lib/ironic
       kolla_config:
          /var/lib/kolla/config_files/ironic_inspector.json:
            command: /usr/bin/ironic-inspector --config-file /etc/ironic-inspector/inspector-dist.conf --config-file /etc/ironic-inspector/inspector.conf
@@ -79,8 +81,6 @@ outputs:
            - path: /var/log/ironic-inspector
              owner: ironic-inspector:ironic-inspector
              recurse: true
-         /var/lib/kolla/config_files/ironic_inspector_dnsmasq.json:
-           command: /sbin/dnsmasq --conf-file=/etc/ironic-inspector/dnsmasq.conf -k
       docker_config:
         step_3:
           ironic_inspector_init_log:
@@ -98,13 +98,22 @@ outputs:
             privileged: false
             detach: false
             volumes:
-              list_concat:
-                - {get_attr: [ContainersCommon, volumes]}
-                -
-                  - /var/lib/config-data/ironic_inspector/etc/:/etc/:ro
-                  - /etc/hosts:/etc/hosts:ro
-                  - /etc/localtime:/etc/localtime:ro
-                  - /var/log/containers/ironic-inspector:/var/log/ironic-inspector
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              # required for bootstrap_host_exec
+              - /etc/puppet:/etc/puppet:ro
+              # OpenSSL trusted CAs
+              - /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro
+              - /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro
+              - /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro
+              - /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro
+              # Syslog socket
+              - /dev/log:/dev/log
+              - /etc/ssh/ssh_known_hosts:/etc/ssh/ssh_known_hosts:ro
+              - /var/lib/config-data/ironic_inspector/etc/ironic-inspector:/etc/ironic-inspector:ro
+              - /etc/hosts:/etc/hosts:ro
+              - /etc/localtime:/etc/localtime:ro
+              - /var/log/containers/ironic-inspector:/var/log/ironic-inspector
             environment:
               - KOLLA_CONFIG_STRATEGY=COPY_ALWAYS
             command: ['ironic-inspector-dbsync', '--config-file', '/etc/ironic-inspector/inspector.conf', 'upgrade']
@@ -129,36 +138,11 @@ outputs:
               # Syslog socket
               - /dev/log:/dev/log
               - /etc/ssh/ssh_known_hosts:/etc/ssh/ssh_known_hosts:ro
-              - /var/lib/config-data/ironic_inspector/etc/:/etc/:ro
+              - /var/lib/kolla/config_files/ironic_inspector.json:/var/lib/kolla/config_files/config.json:ro
+              - /var/lib/config-data/ironic_inspector/etc/ironic-inspector:/etc/ironic-inspector:ro
               - /etc/hosts:/etc/hosts:ro
               - /etc/localtime:/etc/localtime:ro
               - /var/log/containers/ironic-inspector:/var/log/ironic-inspector
-            environment:
-              - KOLLA_CONFIG_STRATEGY=COPY_ALWAYS
-          ironic_inspector_dnsmasq:
-            start_order: 93
-            image: *ironic_inspector_image
-            user: root
-            privileged: true
-            net: host
-            restart: always
-            volumes:
-              - /etc/hosts:/etc/hosts:ro
-              - /etc/localtime:/etc/localtime:ro
-              # required for bootstrap_host_exec
-              - /etc/puppet:/etc/puppet:ro
-              # OpenSSL trusted CAs
-              - /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro
-              - /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro
-              - /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro
-              - /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro
-              # Syslog socket
-              - /dev/log:/dev/log
-              - /etc/ssh/ssh_known_hosts:/etc/ssh/ssh_known_hosts:ro
-              - /var/lib/kolla/config_files/ironic_inspector_dnsmasq.json:/var/lib/kolla/config_files/config.json:ro
-              - /var/lib/config-data/ironic_inspector/:/var/lib/kolla/config_files/src:ro
-              - /etc/hosts:/etc/hosts:ro
-              - /etc/localtime:/etc/localtime:ro
             environment:
               - KOLLA_CONFIG_STRATEGY=COPY_ALWAYS
       host_prep_tasks:
