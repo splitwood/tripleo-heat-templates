@@ -50,7 +50,7 @@ class StoreLocalHook(base.ProcessingHook):
         if not os.path.isdir(CONF.store_local.store_local_path):
             os.makedirs(CONF.store_local.store_local_path)
         with open(path, 'w') as f:
-            f.write(str(introspection_data))
+            f.write(json.dumps(introspection_data))
         node_info.patch([{'op': 'add', 'path': '/extra/inspector_data_path',
                           'value': path}])
 
