@@ -1,0 +1,53 @@
+[console_scripts]
+ironic-inspector = ironic_inspector.cmd.all:main
+ironic-inspector-dbsync = ironic_inspector.dbsync:main
+ironic-inspector-rootwrap = oslo_rootwrap.cmd:main
+
+[ironic_inspector.hooks.node_not_found]
+enroll = ironic_inspector.plugins.discovery:enroll_node_not_found_hook
+example = ironic_inspector.plugins.example:example_not_found_hook
+
+[ironic_inspector.hooks.processing]
+capabilities = ironic_inspector.plugins.capabilities:CapabilitiesHook
+example = ironic_inspector.plugins.example:ExampleProcessingHook
+extra_hardware = ironic_inspector.plugins.extra_hardware:ExtraHardwareHook
+lldp_basic = ironic_inspector.plugins.lldp_basic:LLDPBasicProcessingHook
+local_link_connection = ironic_inspector.plugins.local_link_connection:GenericLocalLinkConnectionHook
+pci_devices = ironic_inspector.plugins.pci_devices:PciDevicesHook
+raid_device = ironic_inspector.plugins.raid_device:RaidDeviceDetection
+ramdisk_error = ironic_inspector.plugins.standard:RamdiskErrorHook
+root_disk_selection = ironic_inspector.plugins.standard:RootDiskSelectionHook
+scheduler = ironic_inspector.plugins.standard:SchedulerHook
+validate_interfaces = ironic_inspector.plugins.standard:ValidateInterfacesHook
+store_local = ironic_inspector.plugins.store_local:StoreLocalHook
+
+[ironic_inspector.rules.actions]
+example = ironic_inspector.plugins.example:ExampleRuleAction
+extend-attribute = ironic_inspector.plugins.rules:ExtendAttributeAction
+fail = ironic_inspector.plugins.rules:FailAction
+set-attribute = ironic_inspector.plugins.rules:SetAttributeAction
+set-capability = ironic_inspector.plugins.rules:SetCapabilityAction
+
+[ironic_inspector.rules.conditions]
+contains = ironic_inspector.plugins.rules:ContainsCondition
+eq = ironic_inspector.plugins.rules:EqCondition
+ge = ironic_inspector.plugins.rules:GeCondition
+gt = ironic_inspector.plugins.rules:GtCondition
+in-net = ironic_inspector.plugins.rules:NetCondition
+is-empty = ironic_inspector.plugins.rules:EmptyCondition
+le = ironic_inspector.plugins.rules:LeCondition
+lt = ironic_inspector.plugins.rules:LtCondition
+matches = ironic_inspector.plugins.rules:MatchesCondition
+ne = ironic_inspector.plugins.rules:NeCondition
+
+[oslo.config.opts]
+ironic_inspector = ironic_inspector.conf:list_opts
+ironic_inspector.common.ironic = ironic_inspector.common.ironic:list_opts
+ironic_inspector.common.swift = ironic_inspector.common.swift:list_opts
+ironic_inspector.plugins.capabilities = ironic_inspector.plugins.capabilities:list_opts
+ironic_inspector.plugins.discovery = ironic_inspector.plugins.discovery:list_opts
+ironic_inspector.plugins.pci_devices = ironic_inspector.plugins.pci_devices:list_opts
+
+[oslo.config.opts.defaults]
+ironic_inspector = ironic_inspector.conf:set_config_defaults
+

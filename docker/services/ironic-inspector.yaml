@@ -143,6 +143,9 @@ outputs:
               - /etc/hosts:/etc/hosts:ro
               - /etc/localtime:/etc/localtime:ro
               - /var/log/containers/ironic-inspector:/var/log/ironic-inspector
+              - /var/lib/ironic:/var/lib/ironic
+              - /var/lib/ironic/hooks/store_local.py:/usr/lib/python2.7/site-packages/ironic_inspector/plugins/store_local.py:ro
+              - /var/lib/ironic/hooks/entry_points.txt:/usr/lib/python2.7/site-packages/ironic_inspector-5.1.1.dev71-py2.7.egg-info/entry_points.txt:ro
             environment:
               - KOLLA_CONFIG_STRATEGY=COPY_ALWAYS
       host_prep_tasks:
@@ -150,3 +153,16 @@ outputs:
           file:
             path: /var/log/containers/ironic-inspector
             state: directory
+        - name: Create custom hooks dir
+          file:
+            path: /var/lib/ironic/hooks
+            state: directory
+        - name: Create custom store_local hook
+          copy:
+            content: {get_file: hooks/store_local.py}
+            dest: /var/lib/ironic/hooks/store_local.py
+        - name: Create custom entry_points.txt for custom hooks
+          copy:
+            content: {get_file: hooks/entry_points.txt}
+            dest: /var/lib/ironic/hooks/entry_points.txt
+
