@@ -145,7 +145,7 @@ outputs:
               - /var/log/containers/ironic-inspector:/var/log/ironic-inspector
               - /var/lib/ironic:/var/lib/ironic
               - /var/lib/ironic/hooks/store_local.py:/usr/lib/python2.7/site-packages/ironic_inspector/plugins/store_local.py:ro
-              - /var/lib/ironic/hooks/entry_points.txt:/usr/lib/python2.7/site-packages/ironic_inspector-5.1.1.dev75-py2.7.egg-info/entry_points.txt:ro
+              - /var/lib/ironic/hooks/entry_points.txt:/usr/lib/python2.7/site-packages/ironic_inspector-5.1.1.dev79-py2.7.egg-info/entry_points.txt:ro
             environment:
               - KOLLA_CONFIG_STRATEGY=COPY_ALWAYS
       host_prep_tasks:
